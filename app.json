@@ -1,15 +1,17 @@
 {
   "expo": {
-    "name": "rytbank-transfer",
+    "name": "Ryt Transfer",
     "slug": "rytbank-transfer",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rytbank.transferassessment"
     },
     "android": {
+      "package": "com.rytbank.transferassessment",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -20,6 +22,22 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID to authorise your transfers."
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow $(PRODUCT_NAME) to access your contacts so you can choose who to pay."
+        }
+      ],
+      "expo-font",
+      "expo-asset"
+    ]
   }
 }
