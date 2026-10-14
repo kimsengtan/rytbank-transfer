@@ -34,6 +34,7 @@ The backend is mocked in memory (`src/features/transfer/api.ts`) with realistic 
 | Scenario                         | How to trigger                                   |
 | -------------------------------- | ------------------------------------------------ |
 | App PIN                          | `123456`                                         |
+| PIN lockout                      | Enter a wrong PIN three times (reload to reset)  |
 | Starting balance                 | RM 8,450.75                                      |
 | Insufficient balance             | Any amount above the balance                     |
 | Per-transfer limit               | Any amount above RM 10,000                       |
@@ -77,14 +78,14 @@ Everything transfer-specific lives in `features/transfer`, so the module can be 
 
 **State.** Server data (balance, history, name lookups, contacts) is handled by TanStack Query: caching, loading and error states, and invalidation of the balance and history after a transfer. It also refetches when the app returns to the foreground. The draft being composed is shared by the form, the recipient picker and the history screen, so it lives in a small Zustand store; components select only the fields they use.
 
-**Money.** Amounts are integers in sen everywhere except the text input, so there is no floating point drift. Input is sanitised as the user types (one decimal point, two decimal places, no leading zeros) and formatted with `Intl.NumberFormat('en-MY')`.
+**Money.** Amounts are integers in sen everywhere except the text input, so there is no floating point drift. Input is sanitised as the user types (one decimal point, two decimal places, no leading zeros) and formatted with `Intl.NumberFormat('en-MY')`. A comma typed on a comma-decimal keyboard is treated as the decimal point, so `12,50` is RM 12.50 and never RM 1,250.
 
 **Biometric authentication.**
 
 - The prompt appears only when the user confirms the transfer, and the message includes the amount and recipient.
-- The device passcode fallback is disabled (`disableDeviceFallback`), so knowing the phone's passcode is not enough to move money. Cancelling the prompt does nothing; a failure, lockout or missing enrolment opens the app PIN instead.
+- The device passcode fallback is disabled (`disableDeviceFallback`), so knowing the phone's passcode is not enough to move money. Cancelling the prompt does nothing; a failure, lockout or missing enrolment opens the app PIN instead. The user can also choose _Use PIN instead_ up front.
 - On Android only strong (Class 3) biometrics are accepted.
-- The PIN is verified by the backend as part of the transfer request and is never stored on the device.
+- The PIN is verified by the backend as part of the transfer request and is never stored on the device. Three wrong attempts lock it. The request is dropped from the query cache once the review screen closes, so the PIN doesn't linger in memory.
 
 **Safe retries.** Each review generates one idempotency key. If the connection drops after the server has processed the transfer, retrying with the same key returns the original result instead of charging twice. Transfers are never retried automatically; the user decides.
 
@@ -111,12 +112,12 @@ Everything transfer-specific lives in `features/transfer`, so the module can be 
 
 - A single MYR savings account; RM 1 minimum and RM 10,000 maximum per transfer.
 - Recipients are identified by a bank account or mobile number of 10-16 digits.
-- Contacts are matched on their first phone number.
+- Contacts are matched on their first phone number; `+60` numbers are converted to the local `01…` format.
 
 ## With more time
 
 - Bind biometrics to a Keychain/Keystore key that signs a server challenge, rather than trusting the local prompt result.
-- PIN attempt limits and lockout, plus root/jailbreak checks and screenshot protection on sensitive screens.
+- Root/jailbreak checks and screenshot protection on sensitive screens.
 - Bank selection, favourites and scheduled transfers.
 - Dark mode and Bahasa Malaysia.
 - End-to-end tests on devices with Maestro.
