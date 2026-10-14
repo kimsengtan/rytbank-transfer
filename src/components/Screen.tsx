@@ -1,6 +1,6 @@
 import { useHeaderHeight } from '@react-navigation/elements';
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, MAX_CONTENT_WIDTH, spacing } from '@/theme';
@@ -22,9 +22,10 @@ export function Screen({ children, footer, scrollable = true }: ScreenProps) {
   const { bottom } = useSafeAreaInsets();
 
   return (
+    // Android is always edge-to-edge now, so the window no longer resizes for the keyboard.
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
       keyboardVerticalOffset={headerHeight}
     >
       {scrollable ? (
