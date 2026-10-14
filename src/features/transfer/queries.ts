@@ -50,6 +50,8 @@ export function useTransfer() {
 
   return useMutation({
     mutationFn: submitTransfer,
+    // The request can carry the PIN, so it shouldn't outlive the review screen in the cache.
+    gcTime: 0,
     // Refreshes the balance and the history in one go.
     onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.account }),
   });

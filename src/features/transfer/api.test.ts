@@ -51,6 +51,21 @@ describe('submitTransfer', () => {
     ).resolves.toBeDefined();
   });
 
+  it('locks the PIN after three incorrect attempts', async () => {
+    // A fresh backend, so the lock doesn't leak into other tests.
+    let backend!: typeof import('./api');
+    jest.isolateModules(() => {
+      backend = jest.requireActual('./api');
+    });
+    const withPin = (pin: string) =>
+      backend.submitTransfer(request({ auth: { method: 'pin', pin } }));
+
+    await expect(withPin('000000')).rejects.toMatchObject({ code: 'INVALID_PIN' });
+    await expect(withPin('000000')).rejects.toMatchObject({ code: 'INVALID_PIN' });
+    await expect(withPin('000000')).rejects.toMatchObject({ code: 'PIN_LOCKED' });
+    await expect(withPin(MOCK_PIN)).rejects.toMatchObject({ code: 'PIN_LOCKED' });
+  });
+
   it('rejects transfers above the available balance', async () => {
     const { balance } = await getAccount();
 

@@ -21,7 +21,10 @@ const server = {
   transactions: createTransactionHistory(),
   completed: new Map<string, Transaction>(),
   failedOnce: new Set<string>(),
+  failedPinAttempts: 0,
 };
+
+const MAX_PIN_ATTEMPTS = 3;
 
 /** Account numbers ending in 0000 don't exist, so the "not found" path can be demoed. */
 const UNKNOWN_ACCOUNT_SUFFIX = '0000';
@@ -60,15 +63,24 @@ export async function lookupRecipient(accountNumber: string): Promise<Recipient>
   return { accountNumber, name: REGISTERED_NAMES[checksum % REGISTERED_NAMES.length] };
 }
 
+/** Locks the PIN after repeated failures so it can't be guessed. */
+function verifyPin(pin: string) {
+  if (server.failedPinAttempts >= MAX_PIN_ATTEMPTS) throw new ApiError('PIN_LOCKED');
+
+  if (pin !== MOCK_PIN) {
+    server.failedPinAttempts += 1;
+    throw new ApiError(server.failedPinAttempts >= MAX_PIN_ATTEMPTS ? 'PIN_LOCKED' : 'INVALID_PIN');
+  }
+  server.failedPinAttempts = 0;
+}
+
 export async function submitTransfer(request: TransferRequest): Promise<Transaction> {
   await delay(1200);
 
   const previous = server.completed.get(request.idempotencyKey);
   if (previous) return previous;
 
-  if (request.auth.method === 'pin' && request.auth.pin !== MOCK_PIN) {
-    throw new ApiError('INVALID_PIN');
-  }
+  if (request.auth.method === 'pin') verifyPin(request.auth.pin);
   if (request.amount === FLAKY_AMOUNT && !server.failedOnce.has(request.idempotencyKey)) {
     server.failedOnce.add(request.idempotencyKey);
     throw new ApiError('NETWORK_ERROR');
