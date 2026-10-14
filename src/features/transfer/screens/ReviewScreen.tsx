@@ -2,7 +2,7 @@ import { randomUUID } from 'expo-crypto';
 import { useState } from 'react';
 
 import { Banner, Button, type ButtonProps, Screen } from '@/components';
-import { getErrorMessage, isApiError } from '@/lib/api';
+import { type ApiError, type ApiErrorCode, getErrorMessage, isApiError } from '@/lib/api';
 import { authenticate, useBiometricLabel } from '@/lib/biometrics';
 import { formatAccountNumber } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
@@ -13,6 +13,12 @@ import { DetailRow, TransferSummary } from '../components/TransferSummary';
 import { useAccount, useTransfer } from '../queries';
 import { useTransferDraft } from '../store';
 import type { TransferAuth } from '../types';
+
+const PIN_ERRORS: ApiErrorCode[] = ['INVALID_PIN', 'PIN_LOCKED'];
+
+/** PIN problems are shown inside the PIN sheet rather than on the screen. */
+const isPinError = (error: unknown): error is ApiError =>
+  isApiError(error) && PIN_ERRORS.includes(error.code);
 
 function confirmIcon(biometricLabel?: string | null): ButtonProps['icon'] {
   if (!biometricLabel) return 'keypad-outline';
@@ -40,7 +46,7 @@ export function ReviewScreen({ navigation, route }: ScreenProps<'Review'>) {
           navigation.replace('Receipt', { transaction });
         },
         onError: (error) => {
-          if (!isApiError(error, 'INVALID_PIN')) setPinVisible(false);
+          if (!isPinError(error)) setPinVisible(false);
         },
       },
     );
@@ -61,20 +67,33 @@ export function ReviewScreen({ navigation, route }: ScreenProps<'Review'>) {
     if (outcome === 'fallback') openPin();
   };
 
-  const pinError = isApiError(transfer.error, 'INVALID_PIN') ? transfer.error.message : undefined;
+  const pinError = isPinError(transfer.error) ? transfer.error.message : undefined;
   const failure = transfer.error && !pinError ? transfer.error : null;
   const canRetry = !failure || (isApiError(failure) && failure.isRetryable);
 
   return (
     <Screen
       footer={
-        <Button
-          title={failure ? 'Try again' : `Confirm with ${biometricLabel ?? 'PIN'}`}
-          icon={confirmIcon(biometricLabel)}
-          loading={authorising || (transfer.isPending && !pinVisible)}
-          disabled={!canRetry}
-          onPress={confirm}
-        />
+        <>
+          <Button
+            title={failure ? 'Try again' : `Confirm with ${biometricLabel ?? 'PIN'}`}
+            icon={confirmIcon(biometricLabel)}
+            // undefined while the device's biometric support is still being checked
+            loading={
+              biometricLabel === undefined || authorising || (transfer.isPending && !pinVisible)
+            }
+            disabled={!canRetry}
+            onPress={confirm}
+          />
+          {biometricLabel && (
+            <Button
+              title="Use PIN instead"
+              variant="ghost"
+              disabled={!canRetry || authorising}
+              onPress={openPin}
+            />
+          )}
+        </>
       }
     >
       <TransferSummary recipient={recipient} amount={amount}>

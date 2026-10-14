@@ -17,18 +17,22 @@ export type AuthOutcome = 'success' | 'cancelled' | 'fallback';
 export async function getBiometricLabel(): Promise<string | null> {
   if (Platform.OS === 'web') return null;
 
-  const [level, types] = await Promise.all([
-    getEnrolledLevelAsync(),
-    supportedAuthenticationTypesAsync(),
-  ]);
-  if (level !== SecurityLevel.BIOMETRIC_STRONG) return null;
+  try {
+    const [level, types] = await Promise.all([
+      getEnrolledLevelAsync(),
+      supportedAuthenticationTypesAsync(),
+    ]);
+    if (level !== SecurityLevel.BIOMETRIC_STRONG) return null;
 
-  if (Platform.OS === 'ios') {
-    return types.includes(AuthenticationType.FACIAL_RECOGNITION) ? 'Face ID' : 'Touch ID';
+    if (Platform.OS === 'ios') {
+      return types.includes(AuthenticationType.FACIAL_RECOGNITION) ? 'Face ID' : 'Touch ID';
+    }
+    return types.length === 1 && types[0] === AuthenticationType.FINGERPRINT
+      ? 'Fingerprint'
+      : 'Biometrics';
+  } catch {
+    return null;
   }
-  return types.length === 1 && types[0] === AuthenticationType.FINGERPRINT
-    ? 'Fingerprint'
-    : 'Biometrics';
 }
 
 export const useBiometricLabel = () =>

@@ -77,6 +77,26 @@ it('falls back to the PIN when biometrics fail', async () => {
   expect(await screen.findByText('Transfer successful')).toBeOnTheScreen();
 });
 
+it('lets the user choose the PIN instead of biometrics', async () => {
+  await startTransfer('25');
+
+  await fireEvent.press(await screen.findByRole('button', { name: 'Use PIN instead' }));
+
+  expect(await screen.findByText('Enter your PIN')).toBeOnTheScreen();
+  expect(mockAuthenticate).not.toHaveBeenCalled();
+});
+
+it('retries safely after the connection drops', async () => {
+  mockAuthenticate.mockResolvedValue('success');
+  await startTransfer('4.04');
+
+  await fireEvent.press(await screen.findByRole('button', { name: 'Confirm with Face ID' }));
+  expect(await screen.findByText(/couldn't reach the server/)).toBeOnTheScreen();
+
+  await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+  expect(await screen.findByText('Transfer successful')).toBeOnTheScreen();
+});
+
 it('goes straight to the PIN on devices without biometrics', async () => {
   mockBiometricLabel.mockReturnValue(null);
   await startTransfer('25');
