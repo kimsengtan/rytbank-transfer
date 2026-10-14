@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Contact, ContactField, ContactsSortOrder, requestPermissionsAsync } from 'expo-contacts';
 import { Platform } from 'react-native';
 
-import { digitsOnly } from '@/lib/format';
+import { toLocalNumber } from '@/lib/format';
 
 import { uniqueRecipients } from './queries';
 import type { Recipient } from './types';
@@ -25,7 +25,7 @@ async function loadContacts(): Promise<ContactsResult> {
   });
 
   const recipients = contacts.flatMap(({ fullName, phones }) => {
-    const accountNumber = digitsOnly(phones[0]?.number ?? '');
+    const accountNumber = toLocalNumber(phones[0]?.number ?? '');
     return fullName && accountNumber ? [{ name: fullName, accountNumber }] : [];
   });
 

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, ListItem, Screen, Text, TextField } from '@/components';
 import { getErrorMessage } from '@/lib/api';
-import { digitsOnly } from '@/lib/format';
+import { toLocalNumber } from '@/lib/format';
 import type { ScreenProps } from '@/navigation/types';
 import { colors, spacing } from '@/theme';
 
@@ -39,7 +39,7 @@ function toSection(title: string, recipients: Recipient[]): Row[] {
 
 function filterRecipients(recipients: Recipient[], search: string) {
   if (!search) return recipients;
-  const digits = digitsOnly(search);
+  const digits = toLocalNumber(search);
   return recipients.filter(
     ({ name, accountNumber }) =>
       name.toLowerCase().includes(search) || (!!digits && accountNumber.includes(digits)),
@@ -50,7 +50,7 @@ export function RecipientsScreen({ navigation }: ScreenProps<'Recipients'>) {
   const [query, setQuery] = useState('');
   // Filtering a large contact list shouldn't block typing.
   const search = useDeferredValue(query.trim().toLowerCase());
-  const typedNumber = /^[\d\s-]+$/.test(search) ? digitsOnly(search) : '';
+  const typedNumber = /^\+?[\d\s-]+$/.test(search) ? toLocalNumber(search) : '';
 
   const { data: recent = NO_RECIPIENTS } = useRecentRecipients();
   const contacts = useContacts();

@@ -15,3 +15,9 @@ export function formatAccountNumber(value: string) {
 }
 
 export const digitsOnly = (value: string) => value.replace(/\D/g, '');
+
+/** "+60 12-345 6789" -> "0123456789", matching how Malaysian numbers are usually typed. */
+export function toLocalNumber(value: string) {
+  const digits = digitsOnly(value);
+  return value.trim().startsWith('+60') ? `0${digits.slice(2)}` : digits;
+}

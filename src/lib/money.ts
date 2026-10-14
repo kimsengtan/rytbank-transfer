@@ -20,9 +20,13 @@ const MAX_INTEGER_DIGITS = 7;
 /**
  * Normalises raw keyboard input into a valid amount string: digits only,
  * a single decimal point, at most two decimal places and no leading zeros.
+ *
+ * The decimal pad shows a comma on devices set to comma-decimal regions, so a comma
+ * is read as the decimal point unless a "." is also present (e.g. a pasted "1,234.50").
  */
 export function sanitizeAmount(text: string): string {
-  const [whole = '', ...fraction] = text.replace(/[^\d.]/g, '').split('.');
+  const decimalised = text.includes('.') ? text : text.replace(/,/g, '.');
+  const [whole = '', ...fraction] = decimalised.replace(/[^\d.]/g, '').split('.');
   const integer = whole.replace(/^0+(?=\d)/, '').slice(0, MAX_INTEGER_DIGITS);
 
   if (fraction.length === 0) return integer;
