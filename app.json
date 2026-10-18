@@ -27,13 +27,13 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID to authorise your transfers."
+          "faceIDPermission": "Allow Ryt Transfer to use Face ID to authorise your transfers."
         }
       ],
       [
         "expo-contacts",
         {
-          "contactsPermission": "Allow $(PRODUCT_NAME) to access your contacts so you can choose who to pay."
+          "contactsPermission": "Allow Ryt Transfer to access your contacts so you can choose who to pay."
         }
       ],
       "expo-font",
