@@ -4,7 +4,17 @@ A payment transfer module for a digital banking app, built with React Native (Ex
 
 ## Demo
 
-Demo video: _link to be added_
+[![Account lookup, Face ID, PIN fallback and receipt](docs/demo-preview.jpg)](docs/demo.mp4)
+
+**[Watch the demo video (1:36)](docs/demo.mp4)**, recorded on the iPhone 16 Pro simulator (iOS 18.2) with a Release build. It walks through:
+
+1. Hiding the balance and the validation shown when continuing with an empty form
+2. Choosing a recipient from recent payees and device contacts, then a name enquiry on a typed mobile number
+3. Reviewing the transfer and approving it with Face ID
+4. Choosing the PIN instead, entering a wrong PIN, then the correct one
+5. A dropped connection (RM 4.04) and a safe retry
+6. Live errors for amounts above the balance and the per-transfer limit
+7. Sending a past transfer again from the history
 
 ## Getting started
 
